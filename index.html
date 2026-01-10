@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOMUS GUILD - Consumer to Co-creator</title>
+    <meta name="description" content="日本の文化を、世界と一緒に育てる場所。FOMUS GUILD。">
+    
+    <!-- Google Fonts: Zen Old Mincho (Serif) & Noto Sans JP (Sans) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Zen+Old+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config for Custom Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fomus: {
+                            black: '#02120a',      /* Deep green near black */
+                            dark: '#052e16',       /* Dark forest */
+                            gold: '#d4af37',       /* Classic gold */
+                            green: '#10b981',      /* Emerald accent */
+                            green_light: '#34d399', /* Bright glow */
+                            lime: '#bef264',       /* Fresh lime */
+                            white: '#f0fdf4',      /* Mint white */
+                            gray: '#94a3b8',       /* Cool gray */
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Zen Old Mincho"', 'serif'],
+                        sans: ['"Noto Sans JP"', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    },
+                    animation: {
+                        'spin-slow': 'spin 12s linear infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 15px rgba(16, 185, 129, 0.2)' },
+                            '50%': { opacity: .8, boxShadow: '0 0 30px rgba(16, 185, 129, 0.5)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-1000px 0' },
+                            '100%': { backgroundPosition: '1000px 0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #02120a;
+            color: #f0fdf4;
+            overflow-x: hidden;
+        }
+        
+        /* Interactive Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Smooth Fade In Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 3D Masu Animation - Forest Theme */
+        .masu-scene {
+            perspective: 1000px;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+        .masu-cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotateMasu 20s infinite linear;
+        }
+        .masu-face {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            background: rgba(16, 185, 129, 0.05);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+            top: 10px; left: 10px;
+        }
+        .masu-face.front  { transform: rotateY(  0deg) translateZ(40px); }
+        .masu-face.back   { transform: rotateY(180deg) translateZ(40px); }
+        .masu-face.right  { transform: rotateY( 90deg) translateZ(40px); }
+        .masu-face.left   { transform: rotateY(-90deg) translateZ(40px); }
+        .masu-face.top    { transform: rotateX( 90deg) translateZ(40px); border-color: rgba(212, 175, 55, 0.8); background: rgba(212, 175, 55, 0.1); }
+        .masu-face.bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+        @keyframes rotateMasu {
+            0% { transform: rotateX(-20deg) rotateY(0deg); }
+            100% { transform: rotateX(-20deg) rotateY(360deg); }
+        }
+        
+        /* Glassmorphism Card Enhanced - Forest Glass */
+        .glass-card {
+            background: rgba(5, 46, 22, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+            transform: skewX(-25deg);
+            transition: 0.6s;
+        }
+        .glass-card:hover::before {
+            left: 150%;
+        }
+        .glass-card:hover {
+            background: rgba(5, 46, 22, 0.6);
+            border-color: rgba(16, 185, 129, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Rank Item Styling */
+        .rank-item {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .rank-item:hover {
+            transform: translateX(10px);
+        }
+        .rank-item.glow-green:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.1) inset;
+        }
+
+        /* Text Switch Fade Effect */
+        .fade-text {
+            transition: opacity 0.3s ease;
+        }
+        .fade-text.changing {
+            opacity: 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #02120a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #052e16; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981; 
+        }
+
+        /* Shimmer Effect for Buttons */
+        .btn-shimmer {
+            background: linear-gradient(to right, #10b981 0%, #34d399 50%, #10b981 100%);
+            background-size: 200% auto;
+            transition: 0.5s;
+        }
+        .btn-shimmer:hover {
+            background-position: right center;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-fomus-white overflow-x-hidden selection:bg-fomus-green selection:text-fomus-black">
+
+    <!-- Interactive Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Header / Nav -->
+    <header class="fixed top-0 w-full z-50 transition-all duration-300 py-4 px-6 md:px-12 flex justify-between items-center mix-blend-difference" id="navbar">
+        <div class="font-serif font-bold text-xl tracking-widest text-fomus-white group cursor-default flex items-center gap-2">
+            <div class="w-3 h-3 bg-fomus-green rotate-45 group-hover:rotate-90 transition-transform duration-500"></div>
+            <span>FOMUS GUILD</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="index_en.html" class="text-xs font-sans tracking-widest text-fomus-white hover:text-fomus-green transition-colors relative group">
+                <span class="opacity-100 font-bold">JP</span> <span class="opacity-50 mx-1 text-fomus-green">/</span> <span class="opacity-50">EN</span>
+                <span class="absolute -bottom-2 left-0 w-full h-px bg-fomus-green scale-x-0 group-hover:scale-x-100 transition-transform origin-right group-hover:origin-left duration-300"></span>
+            </a>
+            <a href="https://buy.stripe.com/14AcN63ENdIh5G4eav4ko0H" class="text-xs tracking-widest border border-fomus-green/30 text-fomus-green/90 px-6 py-2 hover:bg-fomus-green hover:text-fomus-black hover:border-fomus-green transition-all duration-300 rounded-sm">
+                JOIN
+            </a>
+        </div>
+    </header>
+
+    <!-- 1. First View (Hero) -->
+    <section class="relative min-h-screen flex flex-col justify-center items-center text-center px-4 overflow-hidden pt-20">
+        
+        <!-- Center Light Source (Forest Glow) -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-radial-gradient from-fomus-green/10 to-transparent rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-radial-gradient from-fomus-lime/5 to-transparent rounded-full blur-[80px] pointer-events-none mix-blend-overlay"></div>
+
+        <!-- 3D Masu Animation -->
+        <div class="relative z-10 mb-12 opacity-0 animate-fade-in" style="animation: fadeIn 2s ease forwards 0.5s;">
+            <div class="masu-scene">
+                <div class="masu-cube">
+                    <div class="masu-face front"></div>
+                    <div class="masu-face back"></div>
+                    <div class="masu-face right"></div>
+                    <div class="masu-face left"></div>
+                    <div class="masu-face top"></div>
+                    <div class="masu-face bottom"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copy -->
+        <div class="relative z-10 max-w-4xl mx-auto space-y-8">
+            <h1 class="font-serif text-5xl md:text-7xl lg:text-8xl font-medium tracking-wide leading-tight opacity-0 animate-fade-in drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" style="animation: fadeIn 1.5s ease forwards 1s;">
+                FOMUS GUILD
+            </h1>
+            
+            <div class="opacity-0 animate-fade-in space-y-4" style="animation: fadeIn 1.5s ease forwards 1.5s;">
+                <p class="font-serif text-lg md:text-2xl text-fomus-white/90 tracking-widest fade-text" data-i18n="hero_copy">
+                    月980円で参加できる。<br>日本の文化とプロジェクトに、世界から関われるコミュニティ。
+                </p>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-0 animate-fade-in" style="animation: fadeIn 1.5s ease forwards 3s;">
+            <span class="text-[10px] tracking-widest mb-2 text-fomus-green/70 animate-pulse">SCROLL</span>
+            <div class="w-px h-16 bg-gradient-to-b from-fomus-green to-transparent"></div>
+        </div>
+    </section>
+
+    <!-- 2. Definition -->
+    <section class="py-24 md:py-32 px-6 md:px-12 max-w-5xl mx-auto relative">
+        <div class="absolute left-0 top-0 w-px h-40 bg-gradient-to-b from-transparent via-fomus-green/40 to-transparent"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div class="reveal">
+                <h2 class="font-serif text-4xl md:text-6xl leading-tight mb-6">
+                    Consumer to<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-fomus-green to-fomus-lime italic font-light pb-2">Co-creator.</span>
+                </h2>
+                <p class="text-sm font-sans tracking-widest text-fomus-gray mb-8 fade-text flex items-center gap-3" data-i18n="def_sub">
+                    <span class="w-8 h-px bg-fomus-green/50"></span> 消費者から、共創者へ。
+                </p>
+            </div>
+            <div class="reveal space-y-8 font-serif text-fomus-white/90 leading-loose text-justify fade-text" data-i18n="def_body">
+                <p class="text-lg">
+                    FOMUS GUILDは、日本の文化やプロジェクトに<br>
+                    <strong class="text-fomus-green font-normal border-b border-fomus-green/30">「参加する側」</strong>として関われるグローバルコミュニティです。
+                </p>
+                <p>
+                    完成したコンテンツを見るだけではなく、<br>
+                    制作・企画・運営・発信など、<br>
+                    プロジェクトの一部として関わることができます。
+                </p>
+                <p>
+                    関わり方は人それぞれ。<br>
+                    できること・やりたいことに合わせて、<br>
+                    無理のないペースで参加できます。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Experience & Co-creation -->
+    <section class="py-24 bg-fomus-dark/40 relative border-y border-fomus-white/5">
+        <div class="max-w-6xl mx-auto px-6 md:px-12">
+            <div class="text-center mb-16 reveal">
+                <p class="text-xs text-fomus-green tracking-[0.2em] mb-3 uppercase font-bold">What you can do</p>
+                <h3 class="font-serif text-3xl md:text-4xl fade-text" data-i18n="exp_title">ここで体験できること</h3>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Card 1 -->
+                <div class="glass-card p-8 reveal group hover:border-fomus-green/40">
+                    <div class="absolute top-4 right-4 text-fomus-white/5 text-5xl font-serif z-0 group-hover:text-fomus-green/10 transition-colors">01</div>
+                    <div class="relative z-10">
+                        <div class="flex flex-col md:flex-row gap-8 items-stretch">
+                            <div class="md:flex-[2]">
+                                <div class="w-14 h-14 border border-fomus-green/30 rounded-full flex items-center justify-center mb-6 text-fomus-green group-hover:scale-110 group-hover:border-fomus-green group-hover:bg-fomus-green/10 transition-all duration-300 bg-fomus-black/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                    <i class="fa-solid fa-cube text-xl"></i>
+                                </div>
+                                <h4 class="font-serif text-xl mb-3 fade-text group-hover:text-fomus-green_light transition-colors" data-i18n="exp_card1_title">枡を「所有」せず、必要なときに体験する</h4>
+                        <p class="text-sm text-fomus-gray leading-loose fade-text" data-i18n="exp_card1_text">
+                            FOMUSの象徴であるアート枡「MASU」を、<br>
+                            世界中のイベントや活動の場で体験できます。<br><br>
+                            自分で所有する必要はありません。<br>
+                            メンバーであれば、必要な場面で自由に使えます。
+                        </p>
+                            </div>
+                            <div class="w-full md:w-56">
+                                <div class="w-full aspect-square border border-fomus-white/10 bg-fomus-black/40 overflow-hidden">
+                                    <img src="FOMUS枡.png" alt="FOMUSの枡" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-card p-8 reveal group hover:border-fomus-green/40" style="transition-delay: 100ms;">
+                    <div class="absolute top-4 right-4 text-fomus-white/5 text-5xl font-serif z-0 group-hover:text-fomus-green/10 transition-colors">02</div>
+                    <div class="relative z-10">
+                        <div class="flex flex-col md:flex-row gap-8 items-stretch">
+                            <div class="md:flex-[2]">
+                                <div class="w-14 h-14 border border-fomus-green/30 rounded-full flex items-center justify-center mb-6 text-fomus-green group-hover:scale-110 group-hover:border-fomus-green group-hover:bg-fomus-green/10 transition-all duration-300 bg-fomus-black/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                    <i class="fa-solid fa-earth-asia text-xl"></i>
+                                </div>
+                        <h4 class="font-serif text-xl mb-3 fade-text group-hover:text-fomus-green_light transition-colors" data-i18n="exp_card2_title">世界のどこかに、仲間がいる</h4>
+                        <p class="text-sm text-fomus-gray leading-loose fade-text" data-i18n="exp_card2_text">
+                            専用のメンバーMAPで、<br>
+                            世界のどの街に仲間がいるかが分かります。<br><br>
+                            旅先で出会ったり、イベントに参加したり。<br>
+                            国境を越えた、自然なつながりが生まれます。
+                        </p>
+                            </div>
+                            <div class="w-full md:w-56">
+                                <div class="w-full aspect-square border border-fomus-white/10 bg-fomus-black/40 overflow-hidden">
+                                    <img src="mAP.png" alt="FOMUSメンバーMAP" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-card p-8 reveal group hover:border-fomus-green/40" style="transition-delay: 200ms;">
+                    <div class="absolute top-4 right-4 text-fomus-white/5 text-5xl font-serif z-0 group-hover:text-fomus-green/10 transition-colors">03</div>
+                    <div class="relative z-10">
+                        <div class="flex flex-col md:flex-row gap-8 items-stretch">
+                            <div class="md:flex-[2]">
+                                <div class="w-14 h-14 border border-fomus-green/30 rounded-full flex items-center justify-center mb-6 text-fomus-green group-hover:scale-110 group-hover:border-fomus-green group-hover:bg-fomus-green/10 transition-all duration-300 bg-fomus-black/50 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                    <i class="fa-solid fa-hand-holding-heart text-xl"></i>
+                                </div>
+                        <h4 class="font-serif text-xl mb-3 fade-text group-hover:text-fomus-green_light transition-colors" data-i18n="exp_card3_title">プロジェクトに、当事者として関わる</h4>
+                        <p class="text-sm text-fomus-gray leading-loose fade-text" data-i18n="exp_card3_text">
+                            FOMUSのプロジェクトに、<br>
+                            「見る側」ではなく「関わる側」として参加できます。<br><br>
+                            制作、イベント、翻訳、企画など、<br>
+                            興味や得意なことから、無理なく関われます。
+                        </p>
+                            </div>
+                            <div class="w-full md:w-56">
+                                <div class="w-full aspect-square border border-fomus-white/10 bg-fomus-white/90 flex items-center justify-center p-4">
+                                    <img src="FOMUSlogo.jpg" alt="FOMUSロゴ" class="w-full h-full object-contain">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- MASU POINT -->
+    <section class="py-20 px-6 border-y border-fomus-white/5 bg-fomus-dark/20">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-center reveal">
+            <div class="md:col-span-7">
+                <p class="text-xs text-fomus-green tracking-[0.3em] uppercase mb-3">Participation has value.</p>
+                <h3 class="font-serif text-2xl md:text-4xl mb-6 fade-text" data-i18n="masu_title">関わることが、次につながる。</h3>
+                <p class="text-sm md:text-base text-fomus-white/80 leading-loose fade-text mb-6" data-i18n="masu_body">
+                    FOMUS GUILDでは、<br>
+                    イベント参加、企画協力、制作サポートなど、<br>
+                    あなたの関わり一つひとつが記録されていきます。<br><br>
+                    この記録を、私たちは「MASU POINT」と呼んでいます。<br>
+                    MASU POINTは、<br>
+                    「どれだけ関わってきたか」を示す、あなたの活動履歴です。
+                </p>
+                <ul class="text-sm text-fomus-gray space-y-3 fade-text mb-6" data-i18n="masu_points">
+                    <li>・参加できるプロジェクトが増える</li>
+                    <li>・イベントや企画を“主催する側”になれる</li>
+                    <li>・FOMUSの公式活動に関われるようになる</li>
+                </ul>
+                <p class="text-sm text-fomus-white/80 leading-loose fade-text" data-i18n="masu_note">
+                    無理にポイントを集める必要はありません。<br>
+                    関わりたいペースで参加すれば、自然と積み上がっていく仕組みです。<br><br>
+                    ※ MASU POINTは換金や売買を目的としたものではありません。<br>
+                    FOMUS GUILD内での参加履歴として蓄積されます。
+                </p>
+            </div>
+            <div class="md:col-span-5">
+                <div class="w-full aspect-square border border-fomus-white/10 bg-fomus-black/40 backdrop-blur-sm overflow-hidden">
+                    <img src="MASUPOINT.png" alt="MASU POINTのビジュアル" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Rank System (Core Feature) -->
+    <section class="py-16 md:py-20 px-6 md:px-12 max-w-5xl mx-auto">
+        <div class="text-center mb-8 reveal">
+            <div class="inline-block p-1 border border-fomus-green/30 rounded-full mb-4 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                <div class="w-3 h-3 bg-fomus-green rounded-full animate-pulse-glow"></div>
+            </div>
+            <h3 class="font-serif text-2xl md:text-4xl mb-3 fade-text" data-i18n="rank_title">
+                Rank <span class="text-fomus-green">System.</span>
+            </h3>
+            <p class="text-sm text-fomus-gray tracking-widest fade-text mb-6" data-i18n="rank_sub">
+                参加の深さに応じて、役割が変わる
+            </p>
+            <p class="text-xs text-fomus-white/70 fade-text" data-i18n="rank_lead">
+                MASU POINTの積み重ねに応じて、<br>
+                関われる範囲を分かりやすくしたのが、Rank Systemです。
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <!-- Left: Concept -->
+            <div class="md:col-span-5 reveal font-serif text-fomus-white/90 text-sm md:text-base leading-relaxed space-y-4 fade-text text-justify" data-i18n="rank_body">
+                <p>
+                    FOMUS GUILDでは、<br>
+                    参加の深さに応じて A〜D のランクがあります。
+                </p>
+                <p>
+                    ランクは、上下や競争を示すものではありません。<br>
+                    関われる範囲を分かりやすくするための目安です。
+                </p>
+            </div>
+
+            <!-- Right: Rank List -->
+            <div class="md:col-span-7 relative pl-6 md:pl-10 reveal">
+                <div class="absolute left-0 top-4 bottom-4 w-px bg-gradient-to-b from-fomus-dark via-fomus-green/60 to-fomus-dark"></div>
+                
+                <div class="space-y-4">
+                    <!-- Rank A -->
+                    <div class="relative group rank-item glow-green">
+                        <div class="absolute -left-[53px] top-1/2 -translate-y-1/2 w-2 h-2 bg-fomus-green/70 rounded-full border border-fomus-black group-hover:bg-fomus-green transition-colors"></div>
+                        <div class="p-3 border border-fomus-white/10 bg-fomus-dark/40 rounded-sm relative backdrop-blur-sm flex flex-col justify-center">
+                            <div class="relative z-10 mb-1">
+                                <h4 class="text-lg font-serif text-fomus-white group-hover:text-fomus-green_light transition-colors">Rank A</h4>
+                            </div>
+                            <p class="text-xs text-fomus-gray fade-text" data-i18n="rank_a_desc">運営・企画に関わる</p>
+                        </div>
+                    </div>
+
+                    <!-- Rank B -->
+                    <div class="relative group rank-item glow-green">
+                        <div class="absolute -left-[53px] top-1/2 -translate-y-1/2 w-2 h-2 bg-fomus-green/70 rounded-full border border-fomus-black group-hover:bg-fomus-green transition-colors"></div>
+                        <div class="p-3 border border-fomus-white/10 bg-fomus-dark/40 rounded-sm relative backdrop-blur-sm hover:bg-fomus-green/5 transition-colors flex flex-col justify-center">
+                            <div class="relative z-10 mb-1">
+                                <h4 class="text-lg font-serif text-fomus-white group-hover:text-fomus-green_light transition-colors">Rank B</h4>
+                            </div>
+                            <p class="text-xs text-fomus-white/80 fade-text" data-i18n="rank_b_desc">プロジェクトやイベントに主体的に参加</p>
+                        </div>
+                    </div>
+
+                    <!-- Rank C -->
+                    <div class="relative group rank-item">
+                        <div class="absolute -left-[53px] top-1/2 -translate-y-1/2 w-2 h-2 bg-fomus-gray/50 rounded-full border border-fomus-black"></div>
+                        <div class="p-2 border border-fomus-white/5 rounded-sm opacity-70 group-hover:opacity-100 transition-opacity bg-fomus-dark/20 hover:bg-fomus-dark/40 flex flex-col justify-center">
+                            <div class="relative z-10 mb-1">
+                                <h4 class="text-base font-serif text-fomus-gray group-hover:text-fomus-white transition-colors">Rank C</h4>
+                            </div>
+                            <p class="text-xs text-fomus-gray fade-text" data-i18n="rank_c_desc">意見共有・限定企画に参加</p>
+                        </div>
+                    </div>
+
+                    <!-- Rank D -->
+                    <div class="relative group rank-item">
+                        <div class="absolute -left-[53px] top-1/2 -translate-y-1/2 w-2 h-2 bg-fomus-gray/30 rounded-full border border-fomus-black"></div>
+                        <div class="p-2 border border-fomus-white/5 rounded-sm opacity-50 group-hover:opacity-100 transition-opacity bg-fomus-dark/20 hover:bg-fomus-dark/40 flex flex-col justify-center">
+                            <div class="relative z-10 mb-1">
+                                <h4 class="text-base font-serif text-fomus-gray">Rank D</h4>
+                            </div>
+                            <p class="text-xs text-fomus-gray fade-text" data-i18n="rank_d_desc">コミュニティ参加・閲覧</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-xs md:text-sm text-fomus-gray/80 mt-8 leading-relaxed fade-text bg-fomus-dark/30 p-3 rounded-sm border border-fomus-white/5 text-center" data-i18n="rank_summary">
+                    ※ ランク条件や詳細は、参加後に案内されます。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Membership Plan ($10) -->
+    <section class="py-24 px-6 relative overflow-hidden" id="join">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/washi.png')] opacity-5 mix-blend-overlay pointer-events-none"></div>
+        <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[640px] h-[640px] bg-radial-gradient from-fomus-green/10 to-transparent blur-[120px] pointer-events-none"></div>
+        
+        <div class="max-w-6xl mx-auto border border-fomus-green/30 p-8 md:p-12 relative bg-gradient-to-b from-fomus-black/70 via-fomus-dark/40 to-fomus-black/80 backdrop-blur-md reveal shadow-[0_0_60px_rgba(0,0,0,0.55)]">
+            <div class="absolute top-0 left-0 w-6 h-6 border-t border-l border-fomus-green"></div>
+            <div class="absolute top-0 right-0 w-6 h-6 border-t border-r border-fomus-green"></div>
+            <div class="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-fomus-green"></div>
+            <div class="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-fomus-green"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
+                <div class="md:col-span-7 text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3 mb-6">
+                        <span class="w-10 h-px bg-fomus-green/60"></span>
+                        <h3 class="text-xs text-fomus-gray tracking-[0.25em] uppercase fade-text" data-i18n="plan_title">メンバーシップについて</h3>
+                    </div>
+                    <p class="text-base md:text-lg text-fomus-white/85 leading-relaxed mb-4 fade-text" data-i18n="plan_lead">
+                        FOMUS GUILDは、<br>
+                        世界とつながりながら、日本の文化づくりに関われる場所です。
+                    </p>
+                    <p class="text-sm text-fomus-white/80 mb-5 fade-text" data-i18n="plan_intro">
+                        参加すると、以下の体験がひらかれます。
+                    </p>
+
+                    <ul class="text-left text-sm text-fomus-white/85 space-y-4 mb-6 inline-block fade-text" data-i18n="plan_features">
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 rounded-full border border-fomus-green/40 flex items-center justify-center text-fomus-green text-[10px]"><i class="fa-solid fa-check"></i></span> 世界中のFOMUSメンバーとつながる
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 rounded-full border border-fomus-green/40 flex items-center justify-center text-fomus-green text-[10px]"><i class="fa-solid fa-check"></i></span> FOMUSのプロジェクトに関わる
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 rounded-full border border-fomus-green/40 flex items-center justify-center text-fomus-green text-[10px]"><i class="fa-solid fa-check"></i></span> 特殊なアート枡を、必要な場面で利用できる
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-1 w-5 h-5 rounded-full border border-fomus-green/40 flex items-center justify-center text-fomus-green text-[10px]"><i class="fa-solid fa-check"></i></span> 関わりが記録され、できることが少しずつ広がっていく
+                        </li>
+                    </ul>
+
+                    <p class="text-sm text-fomus-white/80 leading-relaxed fade-text" data-i18n="plan_note">
+                        これらはすべて、<br>
+                        自分のペースで、無理なく参加できます。
+                    </p>
+                </div>
+
+                <div class="md:col-span-5 text-center md:text-left md:pl-10 relative">
+                    <div class="absolute -left-2 top-2 bottom-2 w-px bg-gradient-to-b from-fomus-green/60 via-fomus-white/10 to-transparent hidden md:block"></div>
+                    <div class="relative border border-fomus-white/10 bg-gradient-to-b from-fomus-black/60 to-fomus-dark/40 p-6 md:p-8 backdrop-blur-sm overflow-hidden">
+                        <div class="absolute -top-16 -right-12 w-48 h-48 bg-fomus-green/12 rounded-full blur-[70px]"></div>
+                        <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-fomus-green/60 via-transparent to-transparent"></div>
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-2 h-2 bg-fomus-green rounded-full animate-pulse-glow"></div>
+                            <p class="text-[11px] text-fomus-green tracking-[0.35em] uppercase">Investment for Culture</p>
+                        </div>
+                        <p class="text-sm text-fomus-white/80 leading-relaxed mb-4 fade-text">
+                            この場所への参加は、
+                        </p>
+                        <div class="flex items-baseline gap-2 mb-5">
+                            <span class="font-serif text-3xl text-fomus-green drop-shadow-md">980円</span>
+                            <span class="text-xs text-fomus-gray">/ 月（税込）</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-fomus-gray mb-6">
+                            <span class="w-10 h-px bg-fomus-green/40"></span>
+                            <span>Cancel anytime</span>
+                        </div>
+                        <a href="https://buy.stripe.com/14AcN63ENdIh5G4eav4ko0H" class="w-full btn-shimmer text-fomus-black font-bold py-4 px-6 tracking-widest rounded-sm fade-text text-center inline-block" data-i18n="cta_btn">
+                            FOMUS GUILDに参加する
+                        </a>
+                        <p class="text-[10px] text-fomus-gray/80 mt-4 tracking-widest">No hidden fees</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Operation & Trust -->
+    <section class="py-24 px-6 relative overflow-hidden">
+        <div class="absolute -top-20 left-0 w-72 h-72 bg-fomus-green/5 rounded-full blur-[90px] pointer-events-none"></div>
+        <div class="absolute -bottom-24 right-0 w-80 h-80 bg-fomus-green/10 rounded-full blur-[110px] pointer-events-none"></div>
+
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-center reveal">
+            <div class="md:col-span-4 flex flex-col items-center md:items-start md:pl-6 lg:pl-10">
+                <div class="relative">
+                    <div class="absolute -inset-6 rounded-full bg-gradient-to-br from-fomus-green/25 via-fomus-lime/10 to-transparent blur-2xl"></div>
+                    <div class="relative w-40 h-40 rounded-full overflow-hidden ring-2 ring-fomus-green/40 shadow-[0_0_35px_rgba(16,185,129,0.25)]">
+                        <img src="プロフィール.png" alt="まっすーのプロフィール写真" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div class="mt-8 text-center md:text-left">
+                    <p class="text-xs text-fomus-green tracking-[0.35em] uppercase">Operation & Trust</p>
+                    <h3 class="font-serif text-2xl mt-3">まっすー（MaSU）</h3>
+                    <p class="text-xs text-fomus-gray mt-2 tracking-widest">Founder / Operator</p>
+                </div>
+            </div>
+            <div class="md:col-span-8">
+                <div class="relative pl-6 md:pl-10">
+                    <div class="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-fomus-green/50 via-fomus-green/10 to-transparent"></div>
+                    <p class="text-sm text-fomus-white/85 leading-loose fade-text" data-i18n="op_desc1">
+                        FOMUS GUILDは、代表の まっすー（MaSU） が責任を持って運営しています。<br>
+                        プロジェクトの方向性や重要な判断は、代表が最終的に決定します。<br><br>
+                        その一方で、<br>
+                        参加・提案・サポートなどの関わり方は、いつでも自由です。<br><br>
+                        このコミュニティは、<br>
+                        「みんなで参加できる仕組み」と<br>
+                        「責任の所在がはっきりした運営」の両立を大切にしています。<br><br>
+                        誰が運営しているのか分からない場所ではありません。<br>
+                        顔の見える運営と、活動内容がきちんと伝わる透明性をお約束します。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Join CTA -->
+    <section class="py-20 px-6 text-center border-t border-fomus-white/5 bg-gradient-to-b from-fomus-dark/30 to-transparent">
+        <div class="max-w-3xl mx-auto reveal">
+            <p class="text-sm text-fomus-white/80 mb-6 fade-text" data-i18n="join_lead">
+                FOMUS GUILDへの参加はこちらから。
+            </p>
+            <a href="https://buy.stripe.com/14AcN63ENdIh5G4eav4ko0H" class="inline-block btn-shimmer text-fomus-black font-bold py-4 px-10 tracking-widest rounded-sm fade-text" data-i18n="cta_btn">
+                FOMUS GUILDに参加する
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 text-center text-[10px] text-fomus-gray/50 border-t border-fomus-white/5">
+        <div class="mb-4 space-x-4 fade-text" data-i18n="footer_links">
+            <a href="#" class="hover:text-fomus-white transition-colors">利用規約</a>
+            <a href="#" class="hover:text-fomus-white transition-colors">プライバシーポリシー</a>
+            <a href="#" class="hover:text-fomus-white transition-colors">FOMUS公式サイト</a>
+        </div>
+        <p>&copy; FOMUS GUILD. Quiet. Warm. Continuous.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. Background Particle System (Forest Spores) ---
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let width, height;
+
+            const resize = () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            };
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                    this.pulseSpeed = Math.random() * 0.05 + 0.01;
+                    this.pulseAngle = Math.random() * Math.PI * 2;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.pulseAngle += this.pulseSpeed;
+
+                    if (this.x < 0) this.x = width;
+                    if (this.x > width) this.x = 0;
+                    if (this.y < 0) this.y = height;
+                    if (this.y > height) this.y = 0;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    const alpha = this.opacity + Math.sin(this.pulseAngle) * 0.1;
+                    ctx.fillStyle = `rgba(16, 185, 129, ${Math.max(0, alpha)})`;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < 80; i++) {
+                particles.push(new Particle());
+            }
+
+            const animateParticles = () => {
+                ctx.clearRect(0, 0, width, height);
+                
+                particles.forEach((p, index) => {
+                    p.update();
+                    p.draw();
+
+                    for (let j = index + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(16, 185, 129, ${0.1 * (1 - dist/120)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+                requestAnimationFrame(animateParticles);
+            };
+            animateParticles();
+
+
+            // --- 2. Scroll Animations ---
+            const reveals = document.querySelectorAll('.reveal');
+            const styleSheet = document.createElement("style");
+            styleSheet.innerText = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in {
+                    opacity: 0;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+
+            const revealOnScroll = () => {
+                const windowHeight = window.innerHeight;
+                const elementVisible = 100;
+                reveals.forEach((reveal) => {
+                    const elementTop = reveal.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - elementVisible) {
+                        reveal.classList.add('active');
+                    }
+                });
+            };
+            window.addEventListener('scroll', revealOnScroll);
+            revealOnScroll();
+
+            // Navbar opacity
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('bg-fomus-black/90', 'backdrop-blur-md', 'shadow-lg', 'border-b', 'border-fomus-green/10');
+                } else {
+                    navbar.classList.remove('bg-fomus-black/90', 'backdrop-blur-md', 'shadow-lg', 'border-b', 'border-fomus-green/10');
+                }
+            });
+
+            // --- 3. Language Switching ---
+            const translations = {
+                ja: {
+                    hero_copy: "月980円で参加できる。<br>日本の文化とプロジェクトに、世界から関われるコミュニティ。",
+                    hero_sub: "枡から始まる、アート・テクノロジー・人のつながり。",
+                    def_sub: "<span class=\"w-8 h-px bg-fomus-green/50\"></span> 消費者から、共創者へ。",
+                    def_body: `<p class="text-lg">FOMUS GUILDは、日本の文化やプロジェクトに<br><strong class="text-fomus-green font-normal border-b border-fomus-green/30">「参加する側」</strong>として関われるグローバルコミュニティです。</p><p>完成したコンテンツを見るだけではなく、<br>制作・企画・運営・発信など、<br>プロジェクトの一部として関わることができます。</p><p>関わり方は人それぞれ。<br>できること・やりたいことに合わせて、<br>無理のないペースで参加できます。</p>`,
+                    exp_title: "ここで体験できること",
+                    exp_card1_title: "枡を「所有」せず、必要なときに体験する",
+                    exp_card1_text: "FOMUSの象徴であるアート枡「MASU」を、<br>世界中のイベントや活動の場で体験できます。<br><br>自分で所有する必要はありません。<br>メンバーであれば、必要な場面で自由に使えます。",
+                    exp_card2_title: "世界のどこかに、仲間がいる",
+                    exp_card2_text: "専用のメンバーMAPで、<br>世界のどの街に仲間がいるかが分かります。<br><br>旅先で出会ったり、イベントに参加したり。<br>国境を越えた、自然なつながりが生まれます。",
+                    exp_card3_title: "プロジェクトに、当事者として関わる",
+                    exp_card3_text: "FOMUSのプロジェクトに、<br>「見る側」ではなく「関わる側」として参加できます。<br><br>制作、イベント、翻訳、企画など、<br>興味や得意なことから、無理なく関われます。",
+                    masu_title: "関わることが、次につながる。",
+                    masu_body: "FOMUS GUILDでは、<br>イベント参加、企画協力、制作サポートなど、<br>あなたの関わり一つひとつが記録されていきます。<br><br>この記録を、私たちは「MASU POINT」と呼んでいます。<br>MASU POINTは、<br>「どれだけ関わってきたか」を示す、あなたの活動履歴です。",
+                    masu_points: "<li>・参加できるプロジェクトが増える</li><li>・イベントや企画を“主催する側”になれる</li><li>・FOMUSの公式活動に関われるようになる</li>",
+                    masu_note: "無理にポイントを集める必要はありません。<br>関わりたいペースで参加すれば、自然と積み上がっていく仕組みです。<br><br>※ MASU POINTは換金や売買を目的としたものではありません。<br>FOMUS GUILD内での参加履歴として蓄積されます。",
+                    rank_title: "Rank <span class=\"text-fomus-green\">System.</span>",
+                    rank_sub: "参加の深さに応じて、役割が変わる",
+                    rank_lead: "MASU POINTの積み重ねに応じて、<br>関われる範囲を分かりやすくしたのが、Rank Systemです。",
+                    rank_summary: "※ ランク条件や詳細は、参加後に案内されます。",
+                    rank_body: `<p>FOMUS GUILDでは、<br>参加の深さに応じて A〜D のランクがあります。</p><p>ランクは、上下や競争を示すものではありません。<br>関われる範囲を分かりやすくするための目安です。</p>`,
+                    rank_a_desc: "運営・企画に関わる",
+                    rank_b_desc: "プロジェクトやイベントに主体的に参加",
+                    rank_c_desc: "意見共有・限定企画に参加",
+                    rank_d_desc: "コミュニティ参加・閲覧",
+                    story1_title: "世界とつながる朝",
+                    story1_desc: "海外のメンバーと、オンラインでコーヒーを飲みながら雑談する。言葉の壁を超えて、同じ「好き」でつながる時間。",
+                    story2_title: "プレイヤーになる夜",
+                    story2_desc: "ランクが上がり、自分の街でカードゲーム「SILVA」の体験会を主催する。集まった笑顔が、あなたの実績になり、FOMUSの歴史になる。",
+                    plan_title: "メンバーシップについて",
+                    plan_lead: "FOMUS GUILDは、<br>世界とつながりながら、日本の文化づくりに関われる場所です。",
+                    plan_intro: "参加すると、以下の体験がひらかれます。",
+                    plan_features: `<li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> 世界中のFOMUSメンバーとつながる</li><li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> FOMUSのプロジェクトに関わる</li><li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> 特殊なアート枡を、必要な場面で利用できる</li><li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> 関わりが記録され、できることが少しずつ広がっていく</li>`,
+                    plan_note: "これらはすべて、<br>自分のペースで、無理なく参加できます。",
+                    invest_lead: "この場所への参加は、<br>月額 980円（税込） です。",
+                    cta_btn: "FOMUS GUILDに参加する",
+                    join_lead: "FOMUS GUILDへの参加はこちらから。",
+                    op_desc1: "FOMUS GUILDは、代表の まっすー（MaSU） が責任を持って運営しています。<br>プロジェクトの方向性や重要な判断は、代表が最終的に決定します。<br><br>その一方で、<br>参加・提案・サポートなどの関わり方は、いつでも自由です。<br><br>このコミュニティは、<br>「みんなで参加できる仕組み」と<br>「責任の所在がはっきりした運営」の両立を大切にしています。<br><br>誰が運営しているのか分からない場所ではありません。<br>顔の見える運営と、活動内容がきちんと伝わる透明性をお約束します。",
+                    cancel_policy: "参加はいつでもやめられます。<br>まずは1ヶ月、関わってみてください。",
+                    footer_links: `<a href="#" class="hover:text-fomus-white transition-colors">利用規約</a><a href="#" class="hover:text-fomus-white transition-colors">プライバシーポリシー</a><a href="#" class="hover:text-fomus-white transition-colors">FOMUS公式サイト</a>`
+                },
+                en: {
+                    hero_copy: "$10/month to join.<br>A community to engage with Japanese culture and projects from anywhere.",
+                    hero_sub: "Quiet. Warm. Continuous. Art, Technology, and Human Connection.",
+                    def_sub: "<span class=\"w-8 h-px bg-fomus-green/50\"></span> From Consumer to Co-creator.",
+                    def_body: `<p class="text-lg">FOMUS GUILD is a global community where you can take an<br><strong class="text-fomus-green font-normal border-b border-fomus-green/30\">active role</strong> in Japanese culture and projects.</p><p>You don't just watch finished content.<br>You can join parts of the project through production, planning, operations, and communication.</p><p>Participation styles vary.<br>Join at a pace that fits your skills and interests.</p>`,
+                    exp_title: "What you can experience here",
+                    exp_card1_title: "Experience MASU when you need it",
+                    exp_card1_text: "The art Masu \"MASU\" symbolizes FOMUS.<br>Experience it at events and activities worldwide.<br><br>You do not need to own it.<br>As a member, you can use it freely when needed.",
+                    exp_card2_title: "Friends somewhere in the world",
+                    exp_card2_text: "The Member MAP shows which cities have members.<br><br>Meet on your travels or join an event.<br>Natural connections grow beyond borders.",
+                    exp_card3_title: "Join as a true participant",
+                    exp_card3_text: "Join FOMUS projects as an active participant,<br>not just a viewer.<br><br>Production, events, translation, planning, and more—<br>get involved in ways that fit you.",
+                    masu_title: "Participation leads to more.",
+                    masu_body: "In FOMUS GUILD,<br>every involvement—events, planning help, production support—is recorded.<br><br>We call this record “MASU POINT.”<br>MASU POINT shows how much you have been involved—your activity history.",
+                    masu_points: "<li>・More projects you can join</li><li>・Ability to host events and initiatives</li><li>・Eligibility to take part in official FOMUS activities</li>",
+                    masu_note: "No need to chase points.<br>Participate at your own pace and they accumulate naturally.<br><br>* MASU POINT is not for cashing out or trading.<br>It is recorded as your participation history in FOMUS GUILD.",
+                    rank_title: "Rank <span class=\"text-fomus-green\">System.</span>",
+                    rank_sub: "Roles change with the depth of participation",
+                    rank_lead: "As MASU POINT accumulates,<br>Rank System clarifies how your scope of involvement expands.",
+                    rank_summary: "* Rank conditions and details will be provided after joining.",
+                    rank_body: `<p>In FOMUS GUILD,<br>there are ranks A to D based on depth of participation.</p><p>Ranks are not about hierarchy or competition.<br>They are a simple guide to clarify what you can do.</p>`,
+                    rank_a_desc: "Involved in operations and planning",
+                    rank_b_desc: "Active participation in projects and events",
+                    rank_c_desc: "Sharing opinions, joining limited plans",
+                    rank_d_desc: "Community participation and viewing",
+                    story1_title: "Connect with the World",
+                    story1_desc: "Chat with overseas members over coffee online. A time to connect through shared interests, beyond language barriers.",
+                    story2_title: "Become a Player",
+                    story2_desc: "Rank up and host a \"SILVA\" event in your town. The smiles gathered become your achievement and the history of FOMUS.",
+                    plan_title: "What you get for $10 / month",
+                    price_sub: "(approx. 1,500 JPY)",
+                    plan_intro: "Once you join, you can use these right away.",
+                    invest_lead: "$10/month connects you with the world and lets you take part in building Japanese culture.",
+                    plan_features: `<li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> Connect with global members</li><li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> Join FOMUS projects</li><li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> Special Masu Sharing</li><li class="flex items-center gap-3"><i class="fa-solid fa-check text-fomus-green text-xs"></i> Earn points & unlock features</li>`,
+                    invest_desc: "Monthly $10 is not just a service fee.<br>It is a 'Joint Investment' to keep this place quiet and continuous.",
+                    cta_btn: "Join FOMUS GUILD",
+                    join_lead: "Join FOMUS GUILD here.",
+                    op_desc1: "FOMUS GUILD is operated responsibly by representative MaSU.<br>We take leadership in direction.<br>On the other hand, doors for contribution are always open.",
+                    op_desc1: "FOMUS GUILD is run responsibly by its representative, MaSU.<br>Project direction and key decisions are ultimately made by the representative.<br><br>At the same time,<br>participation, proposals, and support are always open and free.<br><br>This community values both<br>\"a system anyone can join\" and<br>\"clear responsibility in operations.\"<br><br>It is not a faceless place.<br>We promise visible leadership and transparent activity.",
+                    cancel_policy: "You can cancel anytime.<br>Try it for just one month.",
+                    footer_links: `<a href="#" class="hover:text-fomus-white transition-colors">Terms</a><a href="#" class="hover:text-fomus-white transition-colors">Privacy</a><a href="#" class="hover:text-fomus-white transition-colors">FOMUS Official</a>`
+                }
+            };
+
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations.ja[key]) {
+                    el.innerHTML = translations.ja[key];
+                }
+            });
+        });
+    </script>
+</body>
+</html>
